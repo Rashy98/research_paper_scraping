@@ -20,10 +20,15 @@ def GetGoogleScholarData(query,num_pages):
             abstract = item.select_one('.gs_rs')
             journal = item.select_one('.gs_a')
 
-            title_text = title.get_text() if title else 'Title not available'
+            if title:
+                title_text = title.get_text()
+                link = title['href']
+            else:
+                title_text = 'Title not available'
+                link = 'Link Not available'
             abstract_text = abstract.get_text() if abstract else 'Abstract not available'
         
-            if journal and title_text != 'Title not available':
+            if journal:
                 bib_text = journal.get_text()
                 publisher_text = bib_text.split('-')[-1].strip()
                 authors_text = bib_text.split('-')[0].strip()
@@ -39,22 +44,24 @@ def GetGoogleScholarData(query,num_pages):
                 'Abstract': abstract_text,
                 'Journal': journal_text,
                 'Publisher': publisher_text,
-                'Authors': authors_text
+                'Authors': authors_text,
+                'Link': link
             })
     df = pd.DataFrame(results)
-    df.to_excel('Sheet11_go.xlsx', index=False)
+    df.to_excel(query+'.xlsx', index=False)
+
     return results
 
 if __name__ == '__main__':
-    #query = input("Enter your query: ")
-    num_pages = 10
-    #int(input("Enter the number of pages to scrape: "))
-    matchedData = GetGoogleScholarData("AI,Breast Cancer,Artificial intelligence,radiotherapy", num_pages)
+    query = input("Enter your query: ")
+    num_pages = 1#int(input("Enter the number of pages to scrape: "))
+    matchedData = GetGoogleScholarData(query, num_pages)
     for entry in matchedData:
         print(f"Title: {entry['Title']}")
         print(f"Abstract: {entry['Abstract']}")
         print(f"Journal: {entry['Journal']}")
         print(f"Publisher: {entry['Publisher']}")
         print(f"Authors: {entry['Authors']}")
+        print(f"Link: {entry['Link']}")
         print("=" * 75)
     print(f"Found {len(matchedData)} in total {num_pages}")
