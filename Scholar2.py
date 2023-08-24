@@ -1,7 +1,7 @@
 from Config import Config
 
 # List the required modules
-required_modules = ['pandas', 'scholarly', 'openpyxl', 'matplotlib', 'wordcloud']
+required_modules = ['pandas', 'scholarly', 'openpyxl', 'matplotlib', 'wordcloud', 'time', 'random', 'fake_useragent']
 
 # Try importing the modules and install the missing ones
 for module in required_modules:
@@ -16,6 +16,9 @@ import pandas as pd
 from scholarly import ProxyGenerator, scholarly
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+import time
+import random
+from fake_useragent import UserAgent 
 
 
 # As a fix for MaxTriesExceededException: Cannot Fetch from Google Scholar
@@ -24,6 +27,7 @@ pg = ProxyGenerator()
 success = pg.FreeProxies()
 scholarly.use_proxy(pg)
 #scholarly.search_author_id('<Your Google Scholar ID>')
+user_agent = UserAgent()
 
 search_query = scholarly.search_pubs(Config.SEARCHKEY)
 
@@ -48,6 +52,16 @@ for i in range(Config.NUMRECORDS):
 
     # Concatenate the new DataFrame with the existing DataFrame
     data = pd.concat([data, new_data], ignore_index=True)
+    
+    # Introduce a random delay between requests to simulate human behavior
+    delay = random.uniform(3.0, 6.0)
+    time.sleep(delay)
+    
+    # Add headers to simulate a web browser's behavior
+    headers = {'User-Agent': user_agent.random}
+    # Enable proxy usage to mimic browser behavior
+    scholarly.use_proxy(http=True, https=True)  
+    
 # Save the DataFrame to an Excel file
 name = Config.SEARCHKEY + '.xlsx'
 data.to_excel(name, index=False)
@@ -67,9 +81,10 @@ plt.ylabel('Count')
 titles = ' '.join (data['Title'].tolist ())
 
 # Create the WordCloud object
-wordcloud = WordCloud(width=1600, height=800, max_font_size=175, background_color='white').generate(titles)
+wordcloud = WordCloud(width=1600, height=800, max_font_size=175, background_color='white', dpi=300).generate(titles)
 # Plot the word cloud
 plt.figure(num='Highlighted areas in the titles')  # Set the figure name
 plt.imshow(wordcloud, interpolation='bilinear')
 plt.axis('off')
 plt.show()
+wordcloud.to_file(name+".png")
